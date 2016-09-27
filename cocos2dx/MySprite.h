@@ -19,13 +19,13 @@ public:
 	CCSprite *GetSprite();
 
 private:
-	CCSprite *m_pSprite;      //精灵指针
-	int m_iNum;               //几号人物
-	int m_iState;             //什么状态
-	int m_iFrame;             //帧数
-	bool m_bCrazy;            //是否抓狂
-	bool m_bHappy;            //是否开心
-	int m_iTimes;             //循环次数
+	CCSprite *m_pSprite;
+	int m_iNum;
+	int m_iState;
+	int m_iFrame;
+	bool m_bCrazy;
+	bool m_bHappy;
+	int m_iTimes;
 };
 
 #endif MY_SPRITE_H
