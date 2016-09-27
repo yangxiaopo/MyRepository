@@ -22,8 +22,6 @@ public:
 private:
 	virtual void onEnter();				//被addChild，添加显示的时候触发，一般来说着个Layer用到的资源和事件都是在这里初始化和加载
 	virtual void onExit();				//被removeChild，删除显示的时候触发，一般来说着个Layer用到的资源和事件都是在这里销毁
-		
-	virtual void update(float dt);		//每帧都会触发的update函数
 
 	GCButton *m_pBtnTest;				//测试按钮
 	GCButton *m_pBtnTest2;
