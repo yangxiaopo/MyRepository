@@ -1,5 +1,7 @@
 #!/bin/bash
 
+sed -i '1cLANG="en_US.UTF-8"' /etc/sysconfig/i18n
+
 if [ "`rpm -qa|grep jdk`" != "" ]; then
 	rpm -qa|grep jdk|xargs rpm -e --nodeps
 fi
@@ -61,3 +63,5 @@ cp -R apache-tomcat-7.0.41 /usr/local/tomcat
 /usr/local/tomcat/bin/startup.sh
 /usr/local/tomcat/bin/shutdown.sh
 service mysql restart
+
+sed 's/<\/host>/<context><\/context>\n&/' server.xml
