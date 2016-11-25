@@ -1,15 +1,15 @@
 //#include <linux/init.h>
+//#include <linux/types.h>
 #include <linux/module.h> //module
 #include <linux/cdev.h> //cdev
-//#include <linux/types.h>
 #include <linux/fs.h> //file_operations
 #include <linux/slab.h> //kmalloc
+#include <linux/uaccess.h> //copy_from_user()
 //#include <linux/errno.h>
 //#include <linux/mm.h>
 //#include <linux/sched.h>
 //#include <asm/io.h>
 //#include <asm/system.h>
-//#include <asm/uaccess.h>
 
 #define SIZE 0x1000
 #define _MAJOR 255
@@ -30,14 +30,48 @@ static int my_open(struct inode *inode, struct file *filp)
 	return 0;
 }
 
-static ssize_t my_read (struct file *filp, char __user *buf, size_t count, loff_t *ppos)
+static ssize_t my_read (struct file *filp, char __user *buf, size_t size, loff_t *ppos)
 {
-	return 0;
+	unsigned long p = *ppos;
+	unsigned int count = size;
+	int ret = 0;
+	struct my_cdev *dev = filp->private_data;
+	
+	if(p >= SIZE)
+		return 0;
+	if(count > SIZE - p)
+		count = SIZE - p;
+		
+	if(copy_to_user(buf,dev->memory,count))
+		ret = -EFAULT;
+	else{
+		*ppos += count;
+		ret = count;
+		printk(KERN_INFO "read %u bytes(s) from %lu\n",count,p);
+	}
+	return ret;
 }
 
-static ssize_t my_write (struct file *filp, const char __user *buf, size_t count, loff_t *ppos)
+static ssize_t my_write (struct file *filp, const char __user *buf, size_t size, loff_t *ppos)
 {
-	return 0;
+	unsigned int count = size;
+	unsigned long p = *ppos;
+	int ret = 0;
+	struct my_cdev *dev = filp->private_data;
+	
+	if(p >= SIZE)
+		return 0;
+	if(count > SIZE - p)
+		count = SIZE - p;
+
+	if(copy_from_user(dev->memory + p,buf,count))
+		ret = -EFAULT;
+	else{
+		*ppos += count;
+		ret = count;
+		printk(KERN_INFO "written %u bytes(s) from %lu\n",count,p);
+	}
+	return ret;
 }
 
 static long my_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
@@ -73,7 +107,7 @@ static int __init my_init(void)
 		cdev_add(&mycdevp->character_dev,MKDEV(cdev_major,i),1);
 		mycdevp->character_dev.owner = THIS_MODULE;
 	}
-	
+	mycdevp -= num;
 	printk(KERN_INFO "hello world enter!");
 	return 0;
 }
@@ -84,6 +118,7 @@ static void __exit my_exit(void)
 	
 	for(i = 0;i < num;i++,mycdevp++)
 		cdev_del(&mycdevp->character_dev);
+	mycdevp -= num;
 	kfree(mycdevp);
 	unregister_chrdev_region(MKDEV(cdev_major,0),num);
 	printk(KERN_INFO "hello world exit!");
