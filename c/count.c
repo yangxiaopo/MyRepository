@@ -30,3 +30,4 @@ int main(int argc,char *argv[])
 {
 	count(13,sizeof(base)/sizeof(int));
 }
+//semi-finished
