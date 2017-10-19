@@ -28,6 +28,12 @@ template <char... args> int operator"" _b3()
 	return temp;
 }
 
+
+/*
+template <> constexpr int b3_helper() instead of 
+template <char c> constexpr int b3_helper()
+will compile successfully
+*/
 int main()
 {
 	int test = 201_b3;
