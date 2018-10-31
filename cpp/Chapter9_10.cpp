@@ -1,6 +1,7 @@
 #include "Chapter9_10.h"
 #include "Chapter9.h"
-
+//#include "Particle3D/CCParticleSystem3D.h"
+#include "extensions/Particle3D/PU/CCPUParticleSystem3D.h"
 
 USING_NS_CC;
 
@@ -12,7 +13,6 @@ Scene* Chapter9_10::createScene()
     Size visibleSize = Director::getInstance()->getVisibleSize();
     Vec2 origin = Director::getInstance()->getVisibleOrigin();
     auto winSize = Director::getInstance()->getWinSize();
-	//Director::getInstance()->setDepthTest(false);
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // create a scene
@@ -24,33 +24,21 @@ Scene* Chapter9_10::createScene()
 	*3D
 	*************/
 	auto camera = scene->getDefaultCamera();
-	//auto camera = Camera::create();
 	camera->initPerspective(60, (GLfloat)winSize.width / winSize.height, 1.0f, 1000.0f);
-	//camera->setCameraFlag(CameraFlag::USER1);
-	//camera->setCameraFlag(CameraFlag::DEFAULT);
 	camera->setPosition3D(Vec3(0.0, 10, 10));
 	camera->lookAt(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 1.0, 0.0));
-	//scene->addChild(camera);
 
 	Terrain::DetailMap r("chapter9/dirt.jpg"), g("chapter9/Grass2.jpg"), b("chapter9/road.jpg"), a("chapter9/GreenSkin.jpg");
     Terrain::TerrainData data("chapter9/heightmap16.jpg","chapter9/alphamap.png",r,g,b,a);
     auto terrain = Terrain::create(data,Terrain::CrackFixedType::SKIRT);
-	//terrain->setCameraMask((unsigned short)CameraFlag::USER1);
 	scene->addChild(terrain);
 
 	static Sprite3D* player = nullptr;
     if(player == nullptr)
 		player = Sprite3D::create("chapter9/orc.c3b");
 	player->setRotation3D(Vec3(0, 180, 0));
-	//player->setScale(8.f);
 	player->setScale(0.15f);
-	/*
-	player->setCameraMask((unsigned short)CameraFlag::USER1);
-	*/
     player->setPositionY(terrain->getHeight(player->getPositionX(),player->getPositionZ()));
-	//player->setCameraMask((unsigned short)CameraFlag::USER2);
-	//player->setPosition(Vec2(origin.x + visibleSize.width / 2, origin.y + visibleSize.height / 2).x, 
-	//	Vec2(origin.x + visibleSize.width / 2, origin.y + visibleSize.height / 2).y);
     auto animation = Animation3D::create("chapter9/orc.c3b");
     if (animation)
     {
@@ -59,13 +47,10 @@ Scene* Chapter9_10::createScene()
         player->runAction(RepeatForever::create(animate));
     }
 
-	//auto sp = Sprite3D::create("chapter9/axe.c3b");
-	//auto boneNode = player->getAttachNode("Bip001 R Hand");
-	//sp->setScale(8.f);
-	//boneNode->addChild(sp);
-	//sp->setCameraMask((unsigned short)CameraFlag::USER1);
-	//sp->setCameraMask((unsigned short)CameraFlag::USER2);
-	//scene->addChild(sp);
+	auto handler = PUParticleSystem3D::create("blackHole.pu");
+	handler->setScale(0.06f);
+	handler->startParticleSystem();
+	player->getAttachNode("Bip001 L Hand")->addChild(handler);
 
 	scene->addChild(player);
 
@@ -99,7 +84,7 @@ Scene* Chapter9_10::createScene()
 		}
 		else
 		{
-			player->removeAllAttachNode();
+			player->removeAttachNode("Bip001 R Hand");
 			item1->setString("Attach");
 		}
 		isAttach = !isAttach;
@@ -116,6 +101,7 @@ Scene* Chapter9_10::createScene()
 	label = LabelTTF::create("MainMenu", "Arial", 24);
 	auto menuItem = MenuItemLabel::create(label);
 	menuItem->setCallback([&](cocos2d::Ref *sender) {
+		item1 = nullptr;
 		isAttach = false;
 		player = nullptr;
 		Director::getInstance()->replaceScene(Chapter9::createScene());
