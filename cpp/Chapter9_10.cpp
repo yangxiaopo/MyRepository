@@ -47,7 +47,7 @@ Scene* Chapter9_10::createScene()
         player->runAction(RepeatForever::create(animate));
     }
 
-	auto handler = PUParticleSystem3D::create("blackHole.pu");
+	auto handler = PUParticleSystem3D::create("blackHole.pu", "pu_mediapack_01.material");
 	handler->setScale(0.06f);
 	handler->startParticleSystem();
 	player->getAttachNode("Bip001 L Hand")->addChild(handler);
