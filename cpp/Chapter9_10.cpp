@@ -48,12 +48,29 @@ Scene* Chapter9_10::createScene()
     }
 
 	auto handler = PUParticleSystem3D::create("blackHole.pu", "pu_mediapack_01.material");
-	handler->setScale(0.06f);
+	handler->setScale(0.03f);
 	handler->startParticleSystem();
 	player->getAttachNode("Bip001 L Hand")->addChild(handler);
 
 	scene->addChild(player);
 
+	Sprite3D* monster = Sprite3D::create("chapter9/ReskinGirl.c3b");
+	monster->setPosition3D(player->getPosition3D() + Vec3(-5, -5, 0));
+	monster->setPositionY(terrain->getHeight(monster->getPositionX(), monster->getPositionZ()));
+	monster->setScale(0.10f);
+	auto animation2 = Animation3D::create("chapter9/ReskinGirl.c3b");
+	if (animation2)
+	{
+		auto animate = Animate3D::create(animation2);
+		monster->runAction(RepeatForever::create(animate));
+	}
+
+	auto handler2 = PUParticleSystem3D::create("flameSystem.pu", "pu_mediapack_01.material");
+	handler2->setScale(0.5f);
+	handler2->startParticleSystem();
+	monster->getAttachNode("Bip01 R Finger1Nub")->addChild(handler2);
+
+	scene->addChild(monster);
 	/************
 	*2D
 	*************/
@@ -68,7 +85,7 @@ Scene* Chapter9_10::createScene()
 	scene->addChild(label);
 
 	static bool isAttach = false;
-	auto label1 = LabelTTF::create("Attach", "Arial", 24);
+	auto label1 = LabelTTF::create("Attach", "Arial", 13);
 	static MenuItemLabel* item1 = nullptr;
 	if (item1 == nullptr)
 	{
