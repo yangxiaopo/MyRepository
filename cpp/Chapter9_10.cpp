@@ -1,12 +1,24 @@
 #include "Chapter9_10.h"
 #include "Chapter9.h"
-//#include "Particle3D/CCParticleSystem3D.h"
 #include "extensions/Particle3D/PU/CCPUParticleSystem3D.h"
+#include <functional>
 
 USING_NS_CC;
 
-static int TerrainTag = 100;
-static int PlayerTag = 101;
+enum class SkinType
+{
+	UPPER_BODY = 0,
+	PANTS,
+	SHOES,
+	HAIR,
+	FACE,
+	HAND,
+	GLASSES,
+	MAX_TYPE,
+};
+
+static std::vector<std::string> _skins[(int)SkinType::MAX_TYPE]; //all skins
+static int                      _curSkin[(int)SkinType::MAX_TYPE]; //current skin index
 
 Scene* Chapter9_10::createScene()
 {
@@ -56,7 +68,7 @@ Scene* Chapter9_10::createScene()
 
 	scene->addChild(player);
 
-	Sprite3D* monster = Sprite3D::create("chapter9/ReskinGirl.c3b");
+	static Sprite3D* monster = Sprite3D::create("chapter9/ReskinGirl.c3b");
 	monster->setPosition3D(player->getPosition3D() + Vec3(-50, -50, 0));
 	monster->setPositionY(terrain->getHeight(monster->getPositionX(), monster->getPositionZ()));
 	auto animation2 = Animation3D::create("chapter9/ReskinGirl.c3b");
@@ -72,6 +84,38 @@ Scene* Chapter9_10::createScene()
 	monster->getAttachNode("Bip01 R Finger1Nub")->addChild(handler2);
 
 	scene->addChild(monster);
+
+	auto& body = _skins[(int)SkinType::UPPER_BODY];
+	body.push_back("Girl_UpperBody01");
+	body.push_back("Girl_UpperBody02");
+
+	auto& pants = _skins[(int)SkinType::PANTS];
+	pants.push_back("Girl_LowerBody01");
+	pants.push_back("Girl_LowerBody02");
+
+	auto& shoes = _skins[(int)SkinType::SHOES];
+	shoes.push_back("Girl_Shoes01");
+	shoes.push_back("Girl_Shoes02");
+
+	auto& hair = _skins[(int)SkinType::HAIR];
+	hair.push_back("Girl_Hair01");
+	hair.push_back("Girl_Hair02");
+
+	auto& face = _skins[(int)SkinType::FACE];
+	face.push_back("Girl_Face01");
+	face.push_back("Girl_Face02");
+
+	auto& hand = _skins[(int)SkinType::HAND];
+	hand.push_back("Girl_Hand01");
+	hand.push_back("Girl_Hand02");
+
+	auto& glasses = _skins[(int)SkinType::GLASSES];
+	glasses.push_back("");
+	glasses.push_back("Girl_Glasses01");
+
+	memset(_curSkin, 0, sizeof(_curSkin));
+
+	//applyCurSkin(monster);
 
 	Sprite3D* monster2 = Sprite3D::create("model/dragon/dragon.c3b");
 	monster2->setPosition3D(player->getPosition3D() + Vec3(50, -50, 0));
@@ -128,6 +172,32 @@ Scene* Chapter9_10::createScene()
 	menuSelect->setCameraMask((unsigned short)CameraFlag::USER2);
 	scene->addChild(menuSelect, 1);
 
+	TTFConfig ttfConfig("fonts/arial.ttf", 13);
+	auto label2 = Label::createWithTTF(ttfConfig, "Hair");
+	auto item2 = MenuItemLabel::create(label2, std::bind(Chapter9_10::menuCallback_reSkin, std::placeholders::_1, monster));
+	auto label3 = Label::createWithTTF(ttfConfig, "Glasses");
+	auto item3 = MenuItemLabel::create(label3, std::bind(Chapter9_10::menuCallback_reSkin, std::placeholders::_1, monster));
+	auto label4 = Label::createWithTTF(ttfConfig, "Coat");
+	auto item4 = MenuItemLabel::create(label4, std::bind(Chapter9_10::menuCallback_reSkin, std::placeholders::_1, monster));
+	auto label5 = Label::createWithTTF(ttfConfig, "Pants");
+	auto item5 = MenuItemLabel::create(label5, std::bind(Chapter9_10::menuCallback_reSkin, std::placeholders::_1, monster));
+	auto label6 = Label::createWithTTF(ttfConfig, "Shoes");
+	auto item6 = MenuItemLabel::create(label6, std::bind(Chapter9_10::menuCallback_reSkin, std::placeholders::_1, monster));
+	item2->setPosition(Vec2(origin.x + 50, origin.y + visibleSize.height - itemSize.height * 2));
+	item3->setPosition(Vec2(origin.x + 50, origin.y + visibleSize.height - itemSize.height * 3));
+	item4->setPosition(Vec2(origin.x + 50, origin.y + visibleSize.height - itemSize.height * 4));
+	item5->setPosition(Vec2(origin.x + 50, origin.y + visibleSize.height - itemSize.height * 5));
+	item6->setPosition(Vec2(origin.x + 50, origin.y + visibleSize.height - itemSize.height * 6));
+	item2->setUserData((void*)SkinType::HAIR);
+	item3->setUserData((void*)SkinType::GLASSES);
+	item4->setUserData((void*)SkinType::UPPER_BODY);
+	item5->setUserData((void*)SkinType::PANTS);
+	item6->setUserData((void*)SkinType::SHOES);
+	auto pMenu1 = Menu::create(item2, item3, item4, item5, item6, nullptr);
+	pMenu1->setPosition(Vec2(0, 0));
+	pMenu1->setCameraMask((unsigned short)CameraFlag::USER2);
+	scene->addChild(pMenu1, 10);
+
 	//add the menu item for back to main menu
 	label = LabelTTF::create("MainMenu", "Arial", 24);
 	auto menuItem = MenuItemLabel::create(label);
@@ -135,6 +205,7 @@ Scene* Chapter9_10::createScene()
 		item1 = nullptr;
 		isAttach = false;
 		player = nullptr;
+		monster = nullptr;
 		Director::getInstance()->replaceScene(Chapter9::createScene());
 	});
 	menuItem->setPosition(Vec2(origin.x + visibleSize.width - 80, origin.y + 25));
@@ -146,4 +217,30 @@ Scene* Chapter9_10::createScene()
 
     // return the scene
     return scene;
+}
+
+void Chapter9_10::applyCurSkin(Sprite3D* player)
+{
+	for (ssize_t i = 0; i < player->getMeshCount(); i++) {
+		auto mesh = player->getMeshByIndex(static_cast<int>(i));
+		bool isVisible = false;
+		for (int j = 0; j < (int)SkinType::MAX_TYPE; j++) {
+			if (mesh->getName() == _skins[j].at(_curSkin[j]))
+			{
+				isVisible = true;
+				break;
+			}
+		}
+		player->getMeshByIndex(static_cast<int>(i))->setVisible(isVisible);
+	}
+}
+
+void Chapter9_10::menuCallback_reSkin(Ref* sender, Sprite3D* player)
+{
+	long index = (long)(((MenuItemLabel*)sender)->getUserData());
+	if (index < (int)SkinType::MAX_TYPE)
+	{
+		_curSkin[index] = (_curSkin[index] + 1) % _skins[index].size();
+		applyCurSkin(player);
+	}
 }
