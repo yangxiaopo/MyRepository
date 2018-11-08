@@ -24,20 +24,22 @@ Scene* Chapter9_10::createScene()
 	*3D
 	*************/
 	auto camera = scene->getDefaultCamera();
-	camera->initPerspective(60, (GLfloat)winSize.width / winSize.height, 1.0f, 1000.0f);
-	camera->setPosition3D(Vec3(0.0, 10, 10));
+	camera->initPerspective(60, (GLfloat)winSize.width / winSize.height, 0.1f, 200.0f);
+	camera->setPosition3D(Vec3(0.0, 100, 100));
 	camera->lookAt(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 1.0, 0.0));
 
 	Terrain::DetailMap r("chapter9/dirt.jpg"), g("chapter9/Grass2.jpg"), b("chapter9/road.jpg"), a("chapter9/GreenSkin.jpg");
-    Terrain::TerrainData data("chapter9/heightmap16.jpg","chapter9/alphamap.png",r,g,b,a);
+	Terrain::TerrainData data("chapter9/heightmap16.jpg", "chapter9/alphamap.png", r, g, b, a, Size(32, 32), 40.0f, 2);
     auto terrain = Terrain::create(data,Terrain::CrackFixedType::SKIRT);
+	terrain->setMaxDetailMapAmount(4);
+	terrain->setSkirtHeightRatio(3);
+	//terrain->setLODDistance(64, 128, 192);
 	scene->addChild(terrain);
 
 	static Sprite3D* player = nullptr;
     if(player == nullptr)
 		player = Sprite3D::create("chapter9/orc.c3b");
 	player->setRotation3D(Vec3(0, 180, 0));
-	player->setScale(0.15f);
     player->setPositionY(terrain->getHeight(player->getPositionX(),player->getPositionZ()));
     auto animation = Animation3D::create("chapter9/orc.c3b");
     if (animation)
@@ -55,9 +57,8 @@ Scene* Chapter9_10::createScene()
 	scene->addChild(player);
 
 	Sprite3D* monster = Sprite3D::create("chapter9/ReskinGirl.c3b");
-	monster->setPosition3D(player->getPosition3D() + Vec3(-5, -5, 0));
+	monster->setPosition3D(player->getPosition3D() + Vec3(-50, -50, 0));
 	monster->setPositionY(terrain->getHeight(monster->getPositionX(), monster->getPositionZ()));
-	monster->setScale(0.10f);
 	auto animation2 = Animation3D::create("chapter9/ReskinGirl.c3b");
 	if (animation2)
 	{
@@ -71,6 +72,19 @@ Scene* Chapter9_10::createScene()
 	monster->getAttachNode("Bip01 R Finger1Nub")->addChild(handler2);
 
 	scene->addChild(monster);
+
+	Sprite3D* monster2 = Sprite3D::create("model/dragon/dragon.c3b");
+	monster2->setPosition3D(player->getPosition3D() + Vec3(50, -50, 0));
+	monster2->setPositionY(terrain->getHeight(monster->getPositionX(), monster->getPositionZ()));
+	auto animation3 = Animation3D::create("model/dragon/dragon.c3b");
+	if (animation3)
+	{
+		auto animate = Animate3D::create(animation3);
+		animate->setSpeed(0.6f);
+		monster2->runAction(RepeatForever::create(animate));
+	}
+
+	scene->addChild(monster2);
 	/************
 	*2D
 	*************/
@@ -107,7 +121,7 @@ Scene* Chapter9_10::createScene()
 		isAttach = !isAttach;
 	});
 	auto itemSize = item1->getContentSize();
-	item1->setPosition(Vec2(origin.x + 50, origin.y + visibleSize.height - itemSize.height * 2));
+	item1->setPosition(Vec2(origin.x + 50, origin.y + visibleSize.height - itemSize.height));
 
 	auto menuSelect = CCMenu::create(item1, NULL);
 	menuSelect->setPosition(Vec2(0, 0));
