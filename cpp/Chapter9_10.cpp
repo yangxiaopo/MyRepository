@@ -24,6 +24,8 @@ static int                      _curSkin[(int)SkinType::MAX_TYPE]; //current ski
 static bool zoomOutPressed = false;
 static bool zoomInPressed = false;
 
+cocos2d::Camera*      camera = nullptr;
+
 Scene* Chapter9_10::createScene()
 {
     Size visibleSize = Director::getInstance()->getVisibleSize();
@@ -39,7 +41,7 @@ Scene* Chapter9_10::createScene()
 	/************************************
 	*3D
 	*************************************/
-	auto camera = scene->getDefaultCamera();
+	camera = scene->getDefaultCamera();
 	camera->initPerspective(60, (GLfloat)winSize.width / winSize.height, 0.1f, 200.0f);
 	camera->setPosition3D(Vec3(0.0, 100, 100));
 	camera->lookAt(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 1.0, 0.0));
@@ -269,6 +271,8 @@ Scene* Chapter9_10::createScene()
 	};
 	Director::getInstance()->getEventDispatcher()->addEventListenerWithSceneGraphPriority(listener3, label8);
 
+	scene->schedule(CC_SCHEDULE_SELECTOR(Chapter9_10::updateCamera), 0.0f);
+
 	//add the menu item for back to main menu
 	label = LabelTTF::create("MainMenu", "Arial", 24);
 	auto menuItem = MenuItemLabel::create(label);
@@ -313,5 +317,129 @@ void Chapter9_10::menuCallback_reSkin(Ref* sender, Sprite3D* player)
 	{
 		_curSkin[index] = (_curSkin[index] + 1) % _skins[index].size();
 		applyCurSkin(player);
+	}
+}
+
+void Chapter9_10::updateCamera(float fDelta)
+{
+	//if (_sprite3D)
+	{
+		/*
+		if (_cameraType == CameraType::ThirdPerson)
+		{
+			updateState(fDelta);
+			if (isState(_curState, State_Move))
+			{
+				move3D(fDelta);
+				if (isState(_curState, State_Rotate))
+				{
+					Vec3 curPos = _sprite3D->getPosition3D();
+
+					Vec3 newFaceDir = _targetPos - curPos;
+					newFaceDir.y = 0;
+					newFaceDir.normalize();
+					Vec3 up;
+					_sprite3D->getNodeToWorldTransform().getUpVector(&up);
+					up.normalize();
+					Vec3 right;
+					Vec3::cross(-newFaceDir, up, &right);
+					right.normalize();
+					Vec3 pos = Vec3(0, 0, 0);
+					Mat4 mat;
+					mat.m[0] = right.x;
+					mat.m[1] = right.y;
+					mat.m[2] = right.z;
+					mat.m[3] = 0.0f;
+
+					mat.m[4] = up.x;
+					mat.m[5] = up.y;
+					mat.m[6] = up.z;
+					mat.m[7] = 0.0f;
+
+					mat.m[8] = newFaceDir.x;
+					mat.m[9] = newFaceDir.y;
+					mat.m[10] = newFaceDir.z;
+					mat.m[11] = 0.0f;
+
+					mat.m[12] = pos.x;
+					mat.m[13] = pos.y;
+					mat.m[14] = pos.z;
+					mat.m[15] = 1.0f;
+					_sprite3D->setAdditionalTransform(&mat);
+				}
+			}
+		}*/
+		if (zoomOutPressed == true)
+		{
+			if (camera)
+			{
+				/*
+				if (_cameraType == CameraType::ThirdPerson)
+				{
+					Vec3 lookDir = _camera->getPosition3D() - _sprite3D->getPosition3D();
+					Vec3 cameraPos = _camera->getPosition3D();
+					if (lookDir.length() <= 300)
+					{
+						cameraPos += lookDir.getNormalized();
+						_camera->setPosition3D(cameraPos);
+					}
+				}
+				else if (_cameraType == CameraType::Free)*/
+				{
+					Vec3 cameraPos = camera->getPosition3D();
+					if (cameraPos.length() <= 300)
+					{
+						cameraPos += cameraPos.getNormalized();
+						camera->setPosition3D(cameraPos);
+					}
+				}
+			}
+		}
+		else if (zoomInPressed == true)
+		{
+			if (camera)
+			{
+				/*
+				if (_cameraType == CameraType::ThirdPerson)
+				{
+					Vec3 lookDir = _camera->getPosition3D() - _sprite3D->getPosition3D();
+					Vec3 cameraPos = _camera->getPosition3D();
+					if (lookDir.length() >= 50)
+					{
+						cameraPos -= lookDir.getNormalized();
+						_camera->setPosition3D(cameraPos);
+					}
+				}
+				else if (_cameraType == CameraType::Free)*/
+				{
+					Vec3 cameraPos = camera->getPosition3D();
+					if (cameraPos.length() >= 50)
+					{
+						cameraPos -= cameraPos.getNormalized();
+						camera->setPosition3D(cameraPos);
+					}
+				}
+			}
+		}
+		/*
+		if (_bRotateLeft == true)
+		{
+			if (_cameraType == CameraType::Free || _cameraType == CameraType::FirstPerson)
+			{
+				Vec3  rotation3D = _camera->getRotation3D();
+				rotation3D.y += 1;
+				_camera->setRotation3D(rotation3D);
+			}
+		}
+		if (_bRotateRight == true)
+		{
+			if (_cameraType == CameraType::Free || _cameraType == CameraType::FirstPerson)
+			{
+				Vec3  rotation3D = _camera->getRotation3D();
+				rotation3D.y -= 1;
+				_camera->setRotation3D(rotation3D);
+			}
+		}
+		*/
 	}
 }
