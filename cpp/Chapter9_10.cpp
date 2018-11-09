@@ -20,6 +20,10 @@ enum class SkinType
 static std::vector<std::string> _skins[(int)SkinType::MAX_TYPE]; //all skins
 static int                      _curSkin[(int)SkinType::MAX_TYPE]; //current skin index
 
+//TODO
+static bool zoomOutPressed = false;
+static bool zoomInPressed = false;
+
 Scene* Chapter9_10::createScene()
 {
     Size visibleSize = Director::getInstance()->getVisibleSize();
@@ -32,9 +36,9 @@ Scene* Chapter9_10::createScene()
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     auto scene = Scene::create();
 
-	/************
+	/************************************
 	*3D
-	*************/
+	*************************************/
 	auto camera = scene->getDefaultCamera();
 	camera->initPerspective(60, (GLfloat)winSize.width / winSize.height, 0.1f, 200.0f);
 	camera->setPosition3D(Vec3(0.0, 100, 100));
@@ -69,7 +73,7 @@ Scene* Chapter9_10::createScene()
 	scene->addChild(player);
 
 	static Sprite3D* monster = Sprite3D::create("chapter9/ReskinGirl.c3b");
-	monster->setPosition3D(player->getPosition3D() + Vec3(-50, -50, 0));
+	monster->setPosition3D(player->getPosition3D() + Vec3(-50, 0, 0));
 	monster->setPositionY(terrain->getHeight(monster->getPositionX(), monster->getPositionZ()));
 	auto animation2 = Animation3D::create("chapter9/ReskinGirl.c3b");
 	if (animation2)
@@ -115,10 +119,10 @@ Scene* Chapter9_10::createScene()
 
 	memset(_curSkin, 0, sizeof(_curSkin));
 
-	//applyCurSkin(monster);
+	applyCurSkin(monster);
 
 	Sprite3D* monster2 = Sprite3D::create("model/dragon/dragon.c3b");
-	monster2->setPosition3D(player->getPosition3D() + Vec3(50, -50, 0));
+	monster2->setPosition3D(player->getPosition3D() + Vec3(50, 0, 0));
 	monster2->setPositionY(terrain->getHeight(monster->getPositionX(), monster->getPositionZ()));
 	auto animation3 = Animation3D::create("model/dragon/dragon.c3b");
 	if (animation3)
@@ -129,21 +133,34 @@ Scene* Chapter9_10::createScene()
 	}
 
 	scene->addChild(monster2);
-	/************
+
+	Sprite3D* monster3 = Sprite3D::create("model/archer/archer.c3b");
+	monster3->setPosition3D(player->getPosition3D() + Vec3(25, 0, 0));
+	monster3->setPositionY(terrain->getHeight(monster->getPositionX(), monster->getPositionZ()));
+	auto animation4 = Animation3D::create("model/archer/archer.c3b");
+	if (animation4)
+	{
+		auto animate = Animate3D::create(animation4);
+		animate->setSpeed(0.6f);
+		monster3->runAction(RepeatForever::create(animate));
+	}
+
+	scene->addChild(monster3);
+	/************************************
 	*2D
-	*************/
+	*************************************/
 	auto camera2D = Camera::create();
 	camera2D->setCameraFlag(CameraFlag::USER2);
 	scene->addChild(camera2D);
 
 	// add title
-	auto label = LabelTTF::create("Terrain", "Arial", 24);
+	auto label = LabelTTF::create("Terrain", "fonts/arial.ttf", 24);
 	label->setPosition(Vec2(origin.x + visibleSize.width / 2, origin.y + visibleSize.height / 2).x, Vec2(origin.x + visibleSize.width / 2, origin.y + visibleSize.height).y - 30);
 	label->setCameraMask((unsigned short)CameraFlag::USER2);
 	scene->addChild(label);
 
 	static bool isAttach = false;
-	auto label1 = LabelTTF::create("Attach", "Arial", 13);
+	auto label1 = LabelTTF::create("Attach", "fonts/arial.ttf", 13);
 	static MenuItemLabel* item1 = nullptr;
 	if (item1 == nullptr)
 	{
@@ -197,6 +214,60 @@ Scene* Chapter9_10::createScene()
 	pMenu1->setPosition(Vec2(0, 0));
 	pMenu1->setCameraMask((unsigned short)CameraFlag::USER2);
 	scene->addChild(pMenu1, 10);
+
+	//zoom in & zoom out
+	auto label7 = Label::createWithTTF(ttfConfig, "Zoom Out");
+	auto item7 = MenuItemLabel::create(label7);
+	auto label8 = Label::createWithTTF(ttfConfig, "Zoom In");
+	auto item8 = MenuItemLabel::create(label8);
+	item7->setPosition(Vec2(origin.x + 50, origin.y + visibleSize.height - itemSize.height * 7));
+	item8->setPosition(Vec2(origin.x + 50, origin.y + visibleSize.height - itemSize.height * 8));
+	auto pMenu2 = Menu::create(item7, item8, nullptr);
+	pMenu2->setPosition(Vec2(0, 0));
+	pMenu2->setCameraMask((unsigned short)CameraFlag::USER2);
+	scene->addChild(pMenu2, 11);
+
+	auto listener2 = EventListenerTouchOneByOne::create();
+	listener2->setSwallowTouches(true);
+	listener2->onTouchBegan = [](Touch* touch, Event* event) -> bool {
+		auto target = static_cast<Label*>(event->getCurrentTarget());
+
+		Vec2 locationInNode = target->convertToNodeSpace(touch->getLocation());
+		Size s = target->getContentSize();
+		Rect rect = Rect(0, 0, s.width, s.height);
+
+		if (rect.containsPoint(locationInNode))
+		{
+			zoomOutPressed = true;
+			return true;
+		}
+		return false;
+	};
+	listener2->onTouchEnded = [](Touch* touch, Event* event) {
+		zoomOutPressed = false;
+	};
+	Director::getInstance()->getEventDispatcher()->addEventListenerWithSceneGraphPriority(listener2, label7);
+
+	auto listener3 = EventListenerTouchOneByOne::create();
+	listener3->setSwallowTouches(true);
+	listener3->onTouchBegan = [](Touch* touch, Event* event) -> bool {
+		auto target = static_cast<Label*>(event->getCurrentTarget());
+
+		Vec2 locationInNode = target->convertToNodeSpace(touch->getLocation());
+		Size s = target->getContentSize();
+		Rect rect = Rect(0, 0, s.width, s.height);
+
+		if (rect.containsPoint(locationInNode))
+		{
+			zoomInPressed = true;
+			return true;
+		}
+		return false;
+	};
+	listener3->onTouchEnded = [](Touch* touch, Event* event) {
+		zoomInPressed = false;
+	};
+	Director::getInstance()->getEventDispatcher()->addEventListenerWithSceneGraphPriority(listener3, label8);
 
 	//add the menu item for back to main menu
 	label = LabelTTF::create("MainMenu", "Arial", 24);
