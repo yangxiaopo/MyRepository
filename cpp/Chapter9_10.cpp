@@ -23,6 +23,8 @@ static int                      _curSkin[(int)SkinType::MAX_TYPE]; //current ski
 //TODO
 static bool zoomOutPressed = false;
 static bool zoomInPressed = false;
+static bool test1 = false;
+static bool test2 = false;
 
 cocos2d::Camera*      camera = nullptr;
 
@@ -222,9 +224,15 @@ Scene* Chapter9_10::createScene()
 	auto item7 = MenuItemLabel::create(label7);
 	auto label8 = Label::createWithTTF(ttfConfig, "Zoom In");
 	auto item8 = MenuItemLabel::create(label8);
+	auto label9 = Label::createWithTTF(ttfConfig, "Test1");
+	auto item9 = MenuItemLabel::create(label9);
+	auto label10 = Label::createWithTTF(ttfConfig, "Test2");
+	auto item10 = MenuItemLabel::create(label10);
 	item7->setPosition(Vec2(origin.x + 50, origin.y + visibleSize.height - itemSize.height * 7));
 	item8->setPosition(Vec2(origin.x + 50, origin.y + visibleSize.height - itemSize.height * 8));
-	auto pMenu2 = Menu::create(item7, item8, nullptr);
+	item9->setPosition(Vec2(origin.x + 50, origin.y + visibleSize.height - itemSize.height * 9));
+	item10->setPosition(Vec2(origin.x + 50, origin.y + visibleSize.height - itemSize.height * 10));
+	auto pMenu2 = Menu::create(item7, item8, item9, item10, nullptr);
 	pMenu2->setPosition(Vec2(0, 0));
 	pMenu2->setCameraMask((unsigned short)CameraFlag::USER2);
 	scene->addChild(pMenu2, 11);
@@ -270,6 +278,27 @@ Scene* Chapter9_10::createScene()
 		zoomInPressed = false;
 	};
 	Director::getInstance()->getEventDispatcher()->addEventListenerWithSceneGraphPriority(listener3, label8);
+
+	auto listener4 = EventListenerTouchOneByOne::create();
+	listener4->setSwallowTouches(true);
+	listener4->onTouchBegan = [](Touch* touch, Event* event) -> bool {
+		auto target = static_cast<Label*>(event->getCurrentTarget());
+
+		Vec2 locationInNode = target->convertToNodeSpace(touch->getLocation());
+		Size s = target->getContentSize();
+		Rect rect = Rect(0, 0, s.width, s.height);
+
+		if (rect.containsPoint(locationInNode))
+		{
+			test1 = true;
+			return true;
+		}
+		return false;
+	};
+	listener4->onTouchEnded = [](Touch* touch, Event* event) {
+		test1 = false;
+	};
+	Director::getInstance()->getEventDispatcher()->addEventListenerWithSceneGraphPriority(listener4, label9);
 
 	scene->schedule(CC_SCHEDULE_SELECTOR(Chapter9_10::updateCamera), 0.0f);
 
@@ -421,16 +450,35 @@ void Chapter9_10::updateCamera(float fDelta)
 				}
 			}
 		}
-		/*
-		if (_bRotateLeft == true)
+		else if (test1 == true)
 		{
-			if (_cameraType == CameraType::Free || _cameraType == CameraType::FirstPerson)
+			//if (_cameraType == CameraType::Free || _cameraType == CameraType::FirstPerson)
 			{
-				Vec3  rotation3D = _camera->getRotation3D();
-				rotation3D.y += 1;
-				_camera->setRotation3D(rotation3D);
+				//Vec3  rotation3D = camera->getRotation3D();
+				//rotation3D.y += 1;//左右
+				//rotation3D.x += 1;//上下
+				//rotation3D.z += 1;//旋转
+				//camera->setRotation3D(rotation3D);
+				//Vec3  position3D = camera->getPosition3D();
+				//position3D.y -= 1;//上限移动
+				//position3D.x -= 1;//左右移动
+				//position3D.z -= 1;//前后移动
+				static float _angle = 0.f;
+				_angle -= CC_DEGREES_TO_RADIANS(1.0);
+
+				//camera->setPosition3D(Vec3(50.0f * sinf(_angle), 50.0f, 50.0f * cosf(_angle)));//OK
+				camera->setPosition3D(Vec3(0.0f, 50.0f * sinf(_angle), 50.0f * cosf(_angle)));
+				{
+					camera->lookAt(Vec3(0.0f, 0.0f, 0.0f), Vec3(0.0f, 1.0f, 0.0f));
+				}
+				//else
+				//{
+				//	camera->lookAt(Vec3(0.0f, 0.0f, 0.0f), Vec3(0.0f, -1.0f, 0.0f));
+				//}
+				//camera->setPosition3D(position3D);
 			}
 		}
+		/*
 		if (_bRotateRight == true)
 		{
 			if (_cameraType == CameraType::Free || _cameraType == CameraType::FirstPerson)
