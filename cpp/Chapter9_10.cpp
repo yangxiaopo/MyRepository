@@ -72,8 +72,18 @@ Scene* Chapter9_10::createScene()
 	auto handler = PUParticleSystem3D::create("blackHole.pu", "pu_mediapack_01.material");
 	handler->setScale(0.03f);
 	handler->startParticleSystem();
-	player->getAttachNode("Bip001 L Hand")->addChild(handler);
+	AttachNode* node = player->getAttachNode("Bip001 L Hand");
 
+	node->addChild(handler);
+
+	auto _cameraFirst = Camera::createPerspective(30, (GLfloat)winSize.width / winSize.height, 10, 200);
+	camera->setCameraFlag(CameraFlag::USER2);
+	_cameraFirst->setCameraFlag(CameraFlag::DEFAULT);
+	player->getAttachNode("Bip001 Head")->addChild(_cameraFirst);
+	_cameraFirst->lookAt(Vec3(0, 5000, 5000));
+
+	//auto bone = player->getSkeleton()->getBoneByName("Bip001 L Hand");
+	//Mat4 mat = player->getNodeToWorldTransform() * bone->getWorldMat();
 	scene->addChild(player);
 
 	static Sprite3D* monster = Sprite3D::create("chapter9/ReskinGirl.c3b");
