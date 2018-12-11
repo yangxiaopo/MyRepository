@@ -76,11 +76,23 @@ Scene* Chapter9_10::createScene()
 
 	node->addChild(handler);
 
-	auto _cameraFirst = Camera::createPerspective(30, (GLfloat)winSize.width / winSize.height, 10, 200);
-	camera->setCameraFlag(CameraFlag::USER2);
-	_cameraFirst->setCameraFlag(CameraFlag::DEFAULT);
-	player->getAttachNode("Bip001 Head")->addChild(_cameraFirst);
-	_cameraFirst->lookAt(Vec3(0, 5000, 5000));
+	//auto _cameraFirst = Camera::createPerspective(30, (GLfloat)winSize.width / winSize.height, 10, 200);
+	//camera->setCameraFlag(CameraFlag::USER2);
+	//_cameraFirst->setCameraFlag(CameraFlag::DEFAULT);
+	scene->removeChild(camera);
+	auto bone = player->getSkeleton()->getBoneByName("Bip001 Head");
+	Mat4 mat = player->getNodeToWorldTransform() * bone->getWorldMat();
+	//player->getAttachNode("Bip001 Head")->addChild(camera);//1
+	//camera->setNodeToParentTransform(mat);//1
+	Vec3 scale, translation;//2
+	Quaternion rotation;
+	mat.decompose(&scale, &rotation, &translation);
+	camera->setScaleX(scale.x);
+	camera->setScaleY(scale.y);
+	camera->setScaleZ(scale.z);
+	camera->setPosition3D(translation);
+	camera->setRotationQuat(rotation);//it's also OK
+	player->getAttachNode("Bip001 Head")->addChild(camera);
 
 	//auto bone = player->getSkeleton()->getBoneByName("Bip001 L Hand");
 	//Mat4 mat = player->getNodeToWorldTransform() * bone->getWorldMat();
