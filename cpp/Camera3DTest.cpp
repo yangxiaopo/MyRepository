@@ -1181,8 +1181,17 @@ void CameraArcBallDemo::updateCameraTransform()
 
     Mat4::createRotation(_rotationQuat, &rot);
     Mat4::createTranslation(_center, &center);
-    Mat4 result = center * rot * trans;
-	_camera->setNodeToParentTransform(center * rot * rot2 * trans);
+    Mat4 result = center * rot * rot2 * trans;
+	//_camera->setNodeToParentTransform(result);//it's OK
+	//////////////////////////////////////////
+	Vec3 scale, translation;
+	Quaternion rotation;
+	result.decompose(&scale, &rotation, &translation);
+	_camera->setScaleX(scale.x);
+	_camera->setScaleY(scale.y);
+	_camera->setScaleZ(scale.z);
+	_camera->setPosition3D(translation);
+	_camera->setRotationQuat(rotation);//it's also OK
 }
 
 void CameraArcBallDemo::switchOperateCallback(Ref* sender)
